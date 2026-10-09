@@ -2,10 +2,12 @@ package br.edu.unisinos.game.model;
 
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -26,4 +28,8 @@ public class Item {
 	private String description;
 	private double price;
 	private int quantity;
+
+	@ManyToOne
+	@JsonBackReference
+	private Inventory inventory;
 }
