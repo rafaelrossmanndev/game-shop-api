@@ -17,15 +17,19 @@ import org.springframework.web.bind.annotation.RestController;
 import br.edu.unisinos.game.dto.ItemRequestDTO;
 import br.edu.unisinos.game.model.Item;
 import br.edu.unisinos.game.service.ItemService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 
 @RestController
 @RequestMapping("/item")
+@Tag(name = "Itens", description = "Operações de gerenciamento de itens")
 public class ItemController {
 	@Autowired
 	private ItemService service;
 	
 	@PostMapping
+	@Operation(summary = "Cria um item")
 	public ResponseEntity<Item> post(@RequestBody ItemRequestDTO dto) {
 		Item item = Item.builder()
 						.name(dto.name())
@@ -40,11 +44,13 @@ public class ItemController {
 	}
 	
 	@GetMapping
+	@Operation(summary = "Lista todos os itens")
 	public ResponseEntity<List<Item>> getAll() {
 		return ResponseEntity.ok(service.getAll());
 	}
 	
 	@GetMapping("/{id}") 
+	@Operation(summary = "Busca um item por ID")
 	public ResponseEntity<Item> getOne(@PathVariable UUID id) {
 		Item item = service.getOne(id);
 		
@@ -56,6 +62,7 @@ public class ItemController {
 	}
 	
 	@DeleteMapping("/{id}")
+	@Operation(summary = "Exclui um item")
 	public ResponseEntity<Void> delete(@PathVariable UUID id) {
 		Item item = service.getOne(id);
 		

@@ -16,15 +16,19 @@ import org.springframework.web.bind.annotation.RestController;
 
 import br.edu.unisinos.game.model.Inventory;
 import br.edu.unisinos.game.service.InventoryService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 
 @RestController
 @RequestMapping("/inventory")
+@Tag(name = "Inventário", description = "Operações de gerenciamento de inventários")
 public class InventoryController {
 	@Autowired
 	private InventoryService service;
 	
 	@PostMapping
+	@Operation(summary = "Cria um inventário")
 	public ResponseEntity<Inventory> post(@RequestBody Inventory inventory) {
 		Inventory newInventory = service.save(inventory);
 		
@@ -32,11 +36,13 @@ public class InventoryController {
 	}
 	
 	@GetMapping
+	@Operation(summary = "Lista todos os inventários")
 	public ResponseEntity<List<Inventory>> getAll() {
 		return ResponseEntity.ok(service.getAll());
 	}
 	
 	@GetMapping("/{id}") 
+	@Operation(summary = "Busca um inventário por ID")
 	public ResponseEntity<Inventory> getOne(@PathVariable UUID id) {
 		Inventory inventory = service.getOne(id);
 		
@@ -48,6 +54,7 @@ public class InventoryController {
 	}
 	
 	@DeleteMapping("/{id}")
+	@Operation(summary = "Exclui um inventário")
 	public ResponseEntity<Void> delete(@PathVariable UUID id) {
 		Inventory inventory = service.getOne(id);
 		
