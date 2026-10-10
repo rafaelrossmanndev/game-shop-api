@@ -3,6 +3,8 @@ package br.edu.unisinos.game.service;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -13,6 +15,8 @@ import br.edu.unisinos.game.model.Player;
 import br.edu.unisinos.game.repository.InventoryRepository;
 import br.edu.unisinos.game.repository.PlayerRepository;
 import br.edu.unisinos.game.repository.ItemRepository;
+import br.edu.unisinos.game.strategy.DiscountStrategyFactory;
+import br.edu.unisinos.game.strategy.DiscountStrategy;
 
 @Service
 public class StoreService {
@@ -28,6 +32,9 @@ public class StoreService {
 	@Autowired
 	private ItemService itemService;
 
+	@Autowired
+	private DiscountStrategyFactory discountStrategyFactory;
+
 
 	@Transactional
 	public String buyItem(UUID playerId, UUID itemId) {
@@ -37,13 +44,35 @@ public class StoreService {
 		if (storeItem.getQuantity() <= 0) {
 			throw new RuntimeException("Item out of stock");
 		}
-		
-		if (player.getWallet() < storeItem.getPrice()) {
+
+		if (storeItem.getType() == null) {
+			throw new IllegalArgumentException("Item type is required");
+		}
+
+		DiscountStrategy strategy =
+				discountStrategyFactory.forType(storeItem.getType());
+
+		BigDecimal originalPrice =
+				BigDecimal.valueOf(storeItem.getPrice());
+
+		BigDecimal discount =
+				strategy.calculateDiscount(originalPrice);
+
+		BigDecimal finalPrice = originalPrice
+				.subtract(discount)
+				.setScale(2, RoundingMode.HALF_UP);
+
+		BigDecimal wallet =
+				BigDecimal.valueOf(player.getWallet());
+
+		if (wallet.compareTo(finalPrice) < 0) {
 			throw new RuntimeException("Insufficient funds");
 		}
-		
-		player.setWallet(player.getWallet() - storeItem.getPrice());
-		playerRepository.save(player); 
+
+		BigDecimal remainingWallet = wallet.subtract(finalPrice);
+
+		player.setWallet(remainingWallet.doubleValue());
+		playerRepository.save(player);
         
 		storeItem.setQuantity(storeItem.getQuantity() - 1);
 		itemRepository.save(storeItem);
@@ -67,6 +96,7 @@ public class StoreService {
 								 .description(storeItem.getDescription())
 								 .price(storeItem.getPrice())
 								 .quantity(1)
+				   				 .type(storeItem.getType())
 								 .build();
 		
 		itemService.addToPlayerInventory(player, purchasedItem);

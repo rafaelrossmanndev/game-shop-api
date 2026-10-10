@@ -27,11 +27,17 @@ public class ItemController {
 	
 	@PostMapping
 	public ResponseEntity<Item> post(@RequestBody ItemRequestDTO dto) {
+
+		if (dto.type() == null) {
+			return ResponseEntity.badRequest().build();
+		}
+
 		Item item = Item.builder()
 						.name(dto.name())
 						.description(dto.description())
 						.price(dto.price())
 						.quantity(dto.quantity())
+						.type(dto.type())
 						.build();
 		
 		Item newItem = service.save(item);
