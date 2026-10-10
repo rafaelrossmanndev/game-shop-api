@@ -11,10 +11,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
 import br.edu.unisinos.game.model.Player;
+import br.edu.unisinos.game.dto.ItemRequestDTO;
+import br.edu.unisinos.game.dto.PlayerRequestDTO;
 import br.edu.unisinos.game.model.Item;
 import br.edu.unisinos.game.service.ItemService;
 import br.edu.unisinos.game.service.PlayerService;
@@ -29,31 +31,60 @@ public class PlayerController {
 	private ItemService itemService;
 	
 	@PostMapping
-	public Player post(@RequestBody Player player) {
-		return service.save(player);
+	public ResponseEntity<Player> post(@RequestBody PlayerRequestDTO dto) {
+		Player player = Player.builder()
+						.nickname(dto.nickname())
+						.wallet(dto.wallet())
+						.build();
+		
+		Player newPlayer = service.save(player);
+		
+		return ResponseEntity.status(HttpStatus.CREATED).body(newPlayer);
 	}
 
 	@PostMapping("/{playerId}/items")
-	public Item addItem(@PathVariable UUID playerId, @RequestBody Item item) {
+	public ResponseEntity<Item> addItem(@PathVariable UUID playerId, @RequestBody ItemRequestDTO dto) {
 		Player player = service.getOne(playerId);
 		if (player == null) {
-			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Player not found");
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
 		}
-		return itemService.addToPlayerInventory(player, item);
+		
+		Item item = Item.builder()
+						.name(dto.name())
+						.description(dto.description())
+						.price(dto.price())
+						.quantity(dto.quantity())
+						.build();
+		
+		Item newItem = itemService.addToPlayerInventory(player, item);	
+		return ResponseEntity.status(HttpStatus.CREATED).body(newItem);
 	}
 	
 	@GetMapping
-	public List<Player> getAll() {
-		return service.getAll();
+	public ResponseEntity<List<Player>> getAll() {
+		return ResponseEntity.ok(service.getAll());
 	}
 	
 	@GetMapping("/{id}")
-	public Player getOne(@PathVariable UUID id) {
-		return service.getOne(id);
+	public ResponseEntity<Player> getOne(@PathVariable UUID id) {
+		Player player = service.getOne(id);
+		
+		if (player == null) {
+			return ResponseEntity.notFound().build();
+		}
+		
+		return ResponseEntity.ok(player);
 	}
 	
 	@DeleteMapping("/{id}")
-	public void delete(@PathVariable UUID id) {
+	public ResponseEntity<Void> delete(@PathVariable UUID id) {
+		Player player = service.getOne(id);
+		
+		if (player == null) {
+			return ResponseEntity.notFound().build();
+		}
 		service.delete(id);
+		
+		return ResponseEntity.noContent().build();
 	}	
 }
