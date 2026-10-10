@@ -1,5 +1,6 @@
 package br.edu.unisinos.game.service;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -70,5 +71,9 @@ public class StoreService {
 		
 		itemService.addToPlayerInventory(player, purchasedItem);
 		return ("Purchase successful.");
+	}
+	
+	public List<Item> getCatalog() {
+		return itemRepository.findByInventoryIsNull();
 	}
 }
